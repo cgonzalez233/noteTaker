@@ -5,7 +5,10 @@
 // ===============================================================================
 
 var noteData = require("../db/db.json");
+const  generateUUId = require('unique-identifier');
+const fs = require('fs');
 
+const uniqueVal =  generateUUId();
 
 // ===============================================================================
 // ROUTING
@@ -34,19 +37,41 @@ module.exports = function(app) {
     // Note the code here. Our "server" will respond to requests and let users know if they have a table or not.
     // It will do this by sending out the value "true" have a table
     // req.body is available since we're using the body parsing middleware
+    console.log(req.body)
+    const uniqueVal =  generateUUId();
+    req.body.id = uniqueVal
+    console.log(req.body)
       noteData.push(req.body);
-      res.json(true);
+      fs.writeFile("./db/db.json", JSON.stringify(noteData), function(err){
+        if(err){
+          throw err
+        }
+        console.log("Updated Notes File")
+        res.json(true);
+
+      })
+    
   });
 
   // ---------------------------------------------------------------------------
   // I added this below code so you could clear out the table while working with the functionality.
   // Don"t worry about it!
 
-  app.delete("api/notes/:id", function(req, res) {
-    console.log(req.params.id, req.body);
-    // Empty out the arrays of data
-    noteData.length = 0;
+  app.delete("/api/notes/:id", function(req, res) {
+    console.log(req.params.id);
+    noteData.forEach(function (item, index) {
+      if (item.id === req.params.id ) {
+         console.log('Deleted Note')
+         noteData.splice(index, 1);
+      }
+  });
+  fs.writeFile("./db/db.json", JSON.stringify(noteData), function(err){
+    if(err){
+      throw err
+    }
+    console.log("Updated Notes File")
+    res.json(true);
 
-    res.json({ ok: true });
+  })
   });
 };
